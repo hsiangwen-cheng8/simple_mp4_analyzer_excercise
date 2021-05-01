@@ -10,3 +10,5 @@ moov
 
 Required: 
 pip install pytz
+pip install -U get-video-properties
+Note: Windows command: pip install -U get-video-properties --user

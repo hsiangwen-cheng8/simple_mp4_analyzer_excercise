@@ -8,7 +8,6 @@ def ReadUI32ToString(fp):
 
 def ReadUI64(fp):
     return struct.unpack('>I', fp.read(8))[0]
-    # struct.unpack('>Q', fp.read(8))[0]
 
 def Read32HexAsString(fp):
     return '0x' +fp.read(4).hex()
@@ -18,3 +17,10 @@ def Read16HexAsString(fp):
 
 def ReadI16(fp):
     return struct.unpack('>h', fp.read(2))[0]
+
+def ReadI32(fp):
+    return struct.unpack('>h', fp.read(4))[0]
+
+def ReadUI16x16(fp):
+    f = struct.unpack('>2H', fp.read(4))[0]
+    return f

@@ -11,12 +11,15 @@ import pytz
 class MP4File:
     def __init__(self, fname):
         with open(fname, "rb") as fp:
-            fsize = os.path.getsize(fname)
-            logging.info('The file size is: %d', fsize)
+            self.fsize = os.path.getsize(fname)
+            logging.info('The file size is: %d', self.fsize)
             box_maker = BoxMaker(0)
             self.boxes = {}
             eof = False
             self.trak_counter = 0
+            # Assume that ftyp for iso is always at the front.
+            # Hence if the first box return is not ftyp, exit()
+            found_ftyp = False
             while not eof:
                 if len(fp.read(4)) != 4:
                     eof = True
@@ -24,33 +27,26 @@ class MP4File:
                 else:
                     fp.seek(-4, 1)
                 box = box_maker.createBoxFromStream(fp)
+                if not found_ftyp:
+                    if box.boxType != 'ftyp':
+                        logging.error('This MP4 file is not iso standard or a format that is not supported. FTYP box must be the first box')
+                        raise Exception(
+                            "This MP4 file is not iso standard or a format that is not supported. FTYP box must be the first box")
+                    else:
+                        found_ftyp = True
                 self.boxes[box.boxType] = box
                 if box.size == 0:
                     eof = True
-
-            # self.recursiveDictPrint(self.boxes)
+            print('.......High Over View of the Structure.......')
             for box in self.boxes:
                 self.boxes[box].print_info()
-                # print(self.boxes[box].size)
-                # print(self.boxes[box].boxType)
-                # for info in self.boxes[box].box_info:
-                #     print(self.boxes[box].box_info[info])
-
-    # def recursiveDictPrint(self, d):
-    #     for k, v in d.items():
-    #         if isinstance(v, dict):
-    #             self.recursiveDictPrint(v)
-    #         else:
-    #             print("{0} : {1}".format(k, v))
 
 
 class BoxMaker:
     def __init__(self, level):
         # Any box not is not in this list will only read the type and size
-        # self.supported_box = ['ftyp', 'mdat', 'moov',
-        #                       'mvhd', 'trak', 'tkhd', 'udta', 'tsel']
-        # self.supported_box = ['ftyp', 'mdat', 'moov', 'mvhd', 'trak', 'tkhd']
-        self.supported_box = ['ftyp', 'mdat', 'moov', 'mvhd', 'trak']
+        self.supported_box = ['ftyp', 'mdat', 'moov',
+                              'mvhd', 'trak', 'tkhd', 'udta', 'tsel']
         self.level = level
 
     def createBoxFromStream(self, fp):
@@ -62,15 +58,18 @@ class BoxMaker:
         largesize = None
         # handle special size values
         if size == 1:
+            logging.error('size == 1 is not supported... exiting')
+            raise Exception(
+                            "Box with size == 1 is not supported... exiting")
             # Box is large 64-bit size
-            largesize = ReadUI64(fp)
+            # largesize = ReadUI64(fp)
             # TODO: Need checking here
-            logging.debug('Size is 1: %d', largesize)
+            # logging.debug('Size is 1, largesize is: %d', largesize)
         if boxType == 'uuid':
-            logging.warning(
-                'A special type uuid is found, no idea what to do yet.')
-            # self.uuid = binascii.b2a_hex(
-            #     fp.read(16)).decode('utf-8', errors="ignore")
+            # TODO: Need checking here
+            logging.error('uuid is not supported... exiting')
+            raise Exception(
+                            "uuid is not supported... exiting")
         return self.chooseBox(fp, size, boxType, starting_fp, self.level, largesize)
 
     def chooseBox(self, fp, size, boxType, starting_fp, level, largesize=None):
@@ -85,7 +84,8 @@ class BoxMaker:
                 'Type %s with size %d: This box type is not supported. Limited Information Only', boxType, size)
             if size >= 8:
                 fp.seek(starting_fp+size)
-                logging.debug('The finshed point of the %s is: %d', boxType , starting_fp+size)
+                logging.debug('The finshed point of the %s is: %d',
+                              boxType, starting_fp+size)
                 return Box(size, boxType, starting_fp, level)
             return None
             # return unsupportedBox(fp, size, boxType, largesize)
@@ -181,8 +181,10 @@ class mdatBox(Box):
 
     def print_info(self):
         super().print_info()
+
 # aligned(8) class MovieBox extends Box(‘moov’){
 # }
+
 
 class moovBox(Box):
     def __init__(self, fp, size, boxType, starting_fp, level, largesize):
@@ -260,7 +262,7 @@ class mvhdBox(FullBox):
             self.box_info['pre_defined'].append(Read32HexAsString(fp))
         self.box_info['next_track_ID'] = ReadUI32(fp)
         fp.seek(starting_fp+self.size)
-        logging.debug('The finshed point of the mvhd is: %d' , starting_fp+size)
+        logging.debug('The finshed point of the mvhd is: %d', starting_fp+size)
 
     def print_info(self):
         super().print_info()
@@ -273,15 +275,15 @@ class mvhdBox(FullBox):
 class trakBox(Box):
     def __init__(self, fp, size, boxType, starting_fp, level, largesize):
         super().__init__(size, boxType, starting_fp, level, largesize)
-        box_maker = BoxMaker(2)
+        box_maker = BoxMaker(level+1)
         while size - 8 > 7:
             box = box_maker.createBoxFromStream(fp)
             self.child_boxes[box.boxType] = box
             size -= box.size
         fp.seek(starting_fp+self.size)
-        
-        logging.debug('The finshed point of the trak is: %d' , starting_fp+self.size)
 
+        logging.debug('The finshed point of the trak is: %d',
+                      starting_fp+self.size)
 
     def print_info(self):
         super().print_info()
@@ -313,55 +315,84 @@ class trakBox(Box):
 #  unsigned int(32) width;
 #  unsigned int(32) height;
 # }
+
+
 class tkhdBox(FullBox):
     def __init__(self, fp, size, boxType, starting_fp, level, largesize):
         super().__init__(fp, size, boxType, starting_fp, level, largesize)
         base_date = datetime(1904, 1, 1, 0, 0, 0, tzinfo=pytz.timezone("UTC"))
-        # if self.box_info['version'] == 0:
-        #     self.box_info['creation_time'] = base_date + \
-        #         timedelta(seconds=ReadUI32(fp))
-        #     self.box_info['modification_time'] = base_date + \
-        #         timedelta(seconds=ReadUI32(fp))
-        #     self.box_info['track_ID'] = ReadUI32(fp)
-        #     self.box_info['reserved'] = ReadUI32(fp)
-        #     self.box_info['duration'] = ReadUI32(fp)
-        # else:
-        #     self.box_info['creation_time'] = base_date + \
-        #         timedelta(seconds=ReadUI64(fp))
-        #     self.box_info['modification_time'] = base_date + \
-        #         timedelta(seconds=ReadUI64(fp))
-        #     self.box_info['track_ID'] = ReadUI32(fp)
-        #     self.box_info['reserved'] = ReadUI32(fp)
-        #     self.box_info['duration'] = ReadUI64(fp)
-        # self.box_info['reserved_array'] = []
-        # self.box_info['reserved_array'].append(ReadUI32(fp))
-        # self.box_info['reserved_array'].append(ReadUI32(fp))
-        # self.box_info['layer'] = ReadI16(fp)
-        # self.box_info['alternate_group'] = ReadI16(fp)
-        # self.box_info['volume'] = ReadI16(fp)
-        # # unsigned int(16) reserved, 
-        # fp.read(2)
-        # self.box_info['matrix'] = []
-        # for i in range(9):
-        #     self.box_info['matrix'].append(Read32HexAsString(fp))
-        # self.box_info['width'].append(ReadUI32(fp))
-        # self.box_info['height'].append(ReadUI32(fp))
+        if self.box_info['version'] == 0:
+            self.box_info['creation_time'] = base_date + \
+                timedelta(seconds=ReadUI32(fp))
+            self.box_info['modification_time'] = base_date + \
+                timedelta(seconds=ReadUI32(fp))
+            self.box_info['track_ID'] = ReadUI32(fp)
+            self.box_info['reserved'] = ReadUI32(fp)
+            self.box_info['duration'] = ReadUI32(fp)
+        else:
+            self.box_info['creation_time'] = base_date + \
+                timedelta(seconds=ReadUI64(fp))
+            self.box_info['modification_time'] = base_date + \
+                timedelta(seconds=ReadUI64(fp))
+            self.box_info['track_ID'] = ReadUI32(fp)
+            self.box_info['reserved'] = ReadUI32(fp)
+            self.box_info['duration'] = ReadUI64(fp)
+        self.box_info['reserved_array'] = []
+        self.box_info['reserved_array'].append(ReadUI32(fp))
+        self.box_info['reserved_array'].append(ReadUI32(fp))
+        self.box_info['layer'] = ReadI16(fp)
+        self.box_info['alternate_group'] = ReadI16(fp)
+        self.box_info['volume'] = ReadI16(fp)
+        # unsigned int(16) reserved,
+        fp.read(2)
+        self.box_info['matrix'] = []
+        for i in range(9):
+            self.box_info['matrix'].append(Read32HexAsString(fp))
+        self.box_info['width'] = ReadUI16x16(fp)
+        self.box_info['height'] = ReadUI16x16(fp)
         fp.seek(starting_fp+self.size)
-        logging.debug('The finshed point of the mvhd is: %d' , starting_fp+size)
+        logging.info(self.box_info)
+        logging.debug('The finshed point of the mvhd is: %d', starting_fp+size)
 
     def print_info(self):
         super().print_info()
-        print(self.box_info)
+        # print(self.box_info)
 
 # aligned(8) class UserDataBox extends Box(‘udta’) {
 # }
-# class UserDataBox(BoxMaker):
-    # def __init__(self, fp, size):
 
+
+class udtaBox(Box):
+    def __init__(self, fp, size, boxType, starting_fp, level, largesize):
+        super().__init__(size, boxType, starting_fp, level, largesize)
+        box_maker = BoxMaker(level+1)
+        while size - 8 > 7:
+            box = box_maker.createBoxFromStream(fp)
+            self.child_boxes[box.boxType] = box
+            size -= box.size
+        fp.seek(starting_fp+self.size)
+        fp.seek(starting_fp+self.size)
+        logging.debug('The finshed point of the %s is: %d',
+                      boxType, starting_fp+size)
+
+    def print_info(self):
+        super().print_info()
+        for child_box in self.child_boxes:
+            self.child_boxes[child_box].print_info()
 # aligned(8) class TrackSelectionBox
 #  extends FullBox(‘tsel’, version = 0, 0) {
 #  template int(32) switch_group = 0;
 #  unsigned int(32) attribute_list[]; // to end of the box
 # }
-# class TrackSeleconBox(BoxMaker):
-    # def __init__(self, fp, size):
+
+
+class tselBox(FullBox):
+    def __init__(self, fp, size, boxType, starting_fp, level, largesize):
+        super().__init__(fp, size, boxType, starting_fp, level, largesize)
+        self.box_info['switch_group'] = ReadI32(fp)
+        self.box_info['attribute_list'] = []
+        while fp < starting_fp+self.size:
+            self.box_info['attribute_list'].append(ReadUI32ToString(fp))
+        fp.seek(starting_fp+self.size)
+        logging.debug('The finshed point of the %s is: %d',
+                      boxType, starting_fp+size)
