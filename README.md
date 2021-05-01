@@ -1,4 +1,5 @@
 # Boxes/Atoms that are supported to parse:
+The boxes are defined in ISO/IEC 14496-12:  
 ftyp  
 mdat  
 moov  
