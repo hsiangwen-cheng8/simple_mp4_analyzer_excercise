@@ -22,7 +22,7 @@ Note: get-vedeo-properties is basically ffprobe
 Using video from youtube under CC license:  
 https://www.youtube.com/watch?v=-5CdAup0o-I&ab_channel=TeacupPuppiesKimsKennelUS     
 ![Sample Output1](/assets/images/SampleOutput/sample_output1.png)  
-Test Video From: 
+Test Video From:  
 http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4    
 ![ElephantsDream1](/assets/images/SampleOutput/ElephantsDream.png)  
 Test Video From:  
