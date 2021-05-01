@@ -26,3 +26,4 @@ https://github.com/axiomatic-systems/Bento4.git
 https://github.com/DigiDNA/ISOBMFF/tree/master/ISOBMFF/source  
 https://github.com/macmade/MP4Parse/tree/master/source  
 https://github.com/sannies/mp4parser  
+https://github.com/essential61/mp4analyser.git
