@@ -15,7 +15,6 @@ class MP4File:
             box_maker = BoxMaker(0)
             self.boxes = {}
             eof = False
-            self.trak_counter = 0
             # Assume that ftyp for iso is always at the front.
             # Hence if the first box return is not ftyp, exit()
             found_ftyp = False
