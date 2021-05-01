@@ -1,7 +1,6 @@
 import os
 import logging
 import struct
-import binascii
 from helper import *
 import sys
 from datetime import date, datetime, time, timedelta
