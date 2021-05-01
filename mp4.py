@@ -358,7 +358,6 @@ class udtaBox(Box):
             self.child_boxes[box.boxType] = box
             size -= box.size
         fp.seek(starting_fp+self.size)
-        fp.seek(starting_fp+self.size)
         logging.getLogger('mp4').debug('The finshed point of the %s is: %d',
                       boxType, starting_fp+size)
 
