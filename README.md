@@ -20,7 +20,11 @@ Note: get-vedeo-properties is basically ffprobe
 
 # Sample output:  
 Using video from youtube under CC license: https://www.youtube.com/watch?v=-5CdAup0o-I&ab_channel=TeacupPuppiesKimsKennelUS   
-![Sample Output1](/assets/images/sample_output1.png)
+![Sample Output1](/assets/images/Sample Output/sample_output1.png)  
+Test Video From http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4  
+![ElephantsDream1](/assets/images/Sample Output/ElephantsDream.png)  
+Test Video From http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4
+![ForBiggerBlazes1](/assets/images/Sample Output/ForBiggerBlazes.png)  
 # Referenced Project: 
 https://github.com/axiomatic-systems/Bento4.git  
 https://github.com/DigiDNA/ISOBMFF/tree/master/ISOBMFF/source  
