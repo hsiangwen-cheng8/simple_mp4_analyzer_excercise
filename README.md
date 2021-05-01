@@ -8,11 +8,14 @@ moov
         udta  
         tsel  
 
-# Required :  
+# Required dependencies/libraries:  
 pip install pytz  
 pip install -U get-video-properties  
 Note: Windows command is: pip install -U get-video-properties --user  
 Note: get-vedeo-properties is basically ffprobe
+
+# How to run?  
+./main.py "path_to_mp4_file"  
 
 # Referenced Project: 
 https://github.com/axiomatic-systems/Bento4.git  
