@@ -41,7 +41,8 @@ class MP4File:
 
 class BoxMaker:
     def __init__(self, level):
-        # Any box not is not in this list will only read the type and size
+        # Any box that is not in this list will only read the type and size
+        # TODO: Need to check for fullbox or box 
         self.supported_box = ['ftyp', 'mdat', 'moov',
                               'mvhd', 'trak', 'tkhd', 'udta', 'tsel']
         self.level = level
@@ -60,10 +61,10 @@ class BoxMaker:
                             "Box with size == 1 is not supported... exiting")
             # Box is large 64-bit size
             # largesize = ReadUI64(fp)
-            # TODO: Need checking here
+            # TODO: Need proper implementation
             # logging.getLogger('mp4').debug('Size is 1, largesize is: %d', largesize)
         if boxType == 'uuid':
-            # TODO: Need checking here
+            # TODO: Need proper implementation
             logging.getLogger('mp4').error('uuid is not supported... exiting')
             raise Exception(
                             "uuid is not supported... exiting")
@@ -85,9 +86,6 @@ class BoxMaker:
                               boxType, starting_fp+size)
                 return Box(size, boxType, starting_fp, level)
             return None
-            # return unsupportedBox(fp, size, boxType, largesize)
-
-# fp seek 8
 
 
 class Box:
@@ -117,13 +115,6 @@ class Box:
     def print_info(self):
         self.pretty_print('Name of the box: ' + self.boxType)
         # self.pretty_print('Size of the box: '+ str(self.size))
-
-# class unsupportedBox(Box):
-#     def __init__(self, fp, size, boxType, largesize):
-#         super().__init__(size, boxType, largesize)
-
-# fp seek 8 + 8
-
 
 class FullBox(Box):
     def __init__(self, fp, size, boxType, starting_fp, level, largesize):
