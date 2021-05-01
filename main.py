@@ -20,8 +20,13 @@ def main(path):
         print('Appoximate bitrate is: ', mp4file.fsize*8/duration)
         print('...................Video...................')
         print('The codec for video: ' + vedioProps['codec_name'])
-        print('The width for video: ' + str(mp4file.boxes['moov'].child_boxes['trak0'].child_boxes['tkhd'].box_info['width']))
-        print('The height for video: ' + str(mp4file.boxes['moov'].child_boxes['trak0'].child_boxes['tkhd'].box_info['height']))
+        if 'trak0' in mp4file.boxes['moov'].child_boxes:
+            if mp4file.boxes['moov'].child_boxes['trak0'].child_boxes['tkhd'].box_info['volume'] == 0:
+                print('The width for video: ' + str(mp4file.boxes['moov'].child_boxes['trak0'].child_boxes['tkhd'].box_info['width']))
+                print('The height for video: ' + str(mp4file.boxes['moov'].child_boxes['trak0'].child_boxes['tkhd'].box_info['height']))
+            else:
+                print('The width for video: ' + str(mp4file.boxes['moov'].child_boxes['trak1'].child_boxes['tkhd'].box_info['width']))
+                print('The height for video: ' + str(mp4file.boxes['moov'].child_boxes['trak1'].child_boxes['tkhd'].box_info['height']))
         print('The avg_frame_rate for video: ' + str(eval(vedioProps['avg_frame_rate'])))
         print('...................Audio...................')
         print('The codec for audio: ' + audioProps['codec_name'])
