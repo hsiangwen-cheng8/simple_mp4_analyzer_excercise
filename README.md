@@ -17,6 +17,9 @@ Note: get-vedeo-properties is basically ffprobe
 # How to run?  
 ./main.py "path_to_mp4_file"  
 
+# Sample output:  
+Using video from youtube under CC license: https://www.youtube.com/watch?v=-5CdAup0o-I&ab_channel=TeacupPuppiesKimsKennelUS   
+![Sample Output1](/assets/images/sample_output1.png)
 # Referenced Project: 
 https://github.com/axiomatic-systems/Bento4.git  
 https://github.com/DigiDNA/ISOBMFF/tree/master/ISOBMFF/source  
