@@ -33,4 +33,4 @@ https://github.com/axiomatic-systems/Bento4.git - For BoxMaker(Ap4AtomFactory)
 https://github.com/DigiDNA/ISOBMFF/tree/master/ISOBMFF/source  
 https://github.com/macmade/MP4Parse/tree/master/source  
 https://github.com/sannies/mp4parser  
-https://github.com/essential61/mp4analyser.git - For parsing bytes  
+https://github.com/essential61/mp4analyser.git - For parsing bytes (struck.unpack())   
