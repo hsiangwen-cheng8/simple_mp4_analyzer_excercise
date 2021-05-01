@@ -12,7 +12,7 @@ class MP4File:
     def __init__(self, fname):
         with open(fname, "rb") as fp:
             self.fsize = os.path.getsize(fname)
-            logging.info('The file size is: %d', self.fsize)
+            logging.getLogger('mp4').info('The file size is: %d', self.fsize)
             box_maker = BoxMaker(0)
             self.boxes = {}
             eof = False
@@ -29,14 +29,12 @@ class MP4File:
                 box = box_maker.createBoxFromStream(fp)
                 if not found_ftyp:
                     if box.boxType != 'ftyp':
-                        logging.error('This MP4 file is not iso standard or a format that is not supported. FTYP box must be the first box')
+                        logging.getLogger('mp4').error('This MP4 file is not iso standard or a format that is not supported. FTYP box must be the first box')
                         raise Exception(
                             "This MP4 file is not iso standard or a format that is not supported. FTYP box must be the first box")
                     else:
                         found_ftyp = True
                 self.boxes[box.boxType] = box
-                if box.size == 0:
-                    eof = True
             print('.......High Over View of the Structure.......')
             for box in self.boxes:
                 self.boxes[box].print_info()
@@ -58,16 +56,16 @@ class BoxMaker:
         largesize = None
         # handle special size values
         if size == 1:
-            logging.error('size == 1 is not supported... exiting')
+            logging.getLogger('mp4').error('size == 1 is not supported... exiting')
             raise Exception(
                             "Box with size == 1 is not supported... exiting")
             # Box is large 64-bit size
             # largesize = ReadUI64(fp)
             # TODO: Need checking here
-            # logging.debug('Size is 1, largesize is: %d', largesize)
+            # logging.getLogger('mp4').debug('Size is 1, largesize is: %d', largesize)
         if boxType == 'uuid':
             # TODO: Need checking here
-            logging.error('uuid is not supported... exiting')
+            logging.getLogger('mp4').error('uuid is not supported... exiting')
             raise Exception(
                             "uuid is not supported... exiting")
         return self.chooseBox(fp, size, boxType, starting_fp, self.level, largesize)
@@ -76,15 +74,15 @@ class BoxMaker:
         if boxType in self.supported_box:
             box_class = getattr(sys.modules[__name__], boxType+'Box')
             if box_class:
-                logging.info(
+                logging.getLogger('mp4').info(
                     'Type %s: Known tpye box will be created', boxType)
                 return box_class(fp, size, boxType, starting_fp, level, largesize)
         else:
-            logging.warning(
+            logging.getLogger('mp4').warning(
                 'Type %s with size %d: This box type is not supported. Limited Information Only', boxType, size)
             if size >= 8:
                 fp.seek(starting_fp+size)
-                logging.debug('The finshed point of the %s is: %d',
+                logging.getLogger('mp4').debug('The finshed point of the %s is: %d',
                               boxType, starting_fp+size)
                 return Box(size, boxType, starting_fp, level)
             return None
@@ -99,17 +97,17 @@ class Box:
         self.size = size
         self.starting_fp = starting_fp
         self.level = level
-        logging.debug('Type of Box: %s', boxType)
-        logging.debug('Size of Box: %u', size)
-        logging.debug('The starting point of the fp is %d', starting_fp)
+        logging.getLogger('mp4').debug('Type of Box: %s', boxType)
+        logging.getLogger('mp4').debug('Size of Box: %u', size)
+        logging.getLogger('mp4').debug('The starting point of the fp is %d', starting_fp)
         self.largesize = largesize
         self.box_info = {}
         self.child_boxes = {}
         if self.largesize == None:
-            logging.debug(
+            logging.getLogger('mp4').debug(
                 'This is a normal box where largesize is not defined')
         else:
-            logging.debug('largesize: %d', largesize)
+            logging.getLogger('mp4').debug('largesize: %d', largesize)
 
     def pretty_print(self, message):
         ladder = "|"
@@ -134,8 +132,8 @@ class FullBox(Box):
         bytes_read = ReadUI32(fp)
         self.box_info['version'] = bytes_read // 16777216
         self.box_info['flags'] = "{0:#08x}".format(bytes_read % 16777216)
-        logging.debug('version: %s', self.box_info['version'])
-        logging.debug('flags: %s', self.box_info['flags'])
+        logging.getLogger('mp4').debug('version: %s', self.box_info['version'])
+        logging.getLogger('mp4').debug('flags: %s', self.box_info['flags'])
 
     def print_info(self):
         super().print_info()
@@ -154,9 +152,9 @@ class ftypBox(Box):
     def __init__(self, fp, size, boxType, starting_fp, level, largesize):
         super().__init__(size, boxType, starting_fp, level, largesize)
         self.box_info['major_brand'] = ReadUI32ToString(fp)
-        logging.debug('major_brand: %s', self.box_info['major_brand'])
+        logging.getLogger('mp4').debug('major_brand: %s', self.box_info['major_brand'])
         self.box_info['minor_version'] = "{0:#010x}".format(ReadUI32(fp))
-        logging.debug('minor_version: %s', self.box_info['minor_version'])
+        logging.getLogger('mp4').debug('minor_version: %s', self.box_info['minor_version'])
         # Prepare to loop
         size -= 16
         self.box_info['compatible_brands'] = []
@@ -164,7 +162,7 @@ class ftypBox(Box):
             self.box_info['compatible_brands'].append(ReadUI32ToString(fp))
             size -= 4
 
-        logging.debug('compatible_brands: %s',
+        logging.getLogger('mp4').debug('compatible_brands: %s',
                       self.box_info['compatible_brands'])
 
     def print_info(self):
@@ -262,7 +260,7 @@ class mvhdBox(FullBox):
             self.box_info['pre_defined'].append(Read32HexAsString(fp))
         self.box_info['next_track_ID'] = ReadUI32(fp)
         fp.seek(starting_fp+self.size)
-        logging.debug('The finshed point of the mvhd is: %d', starting_fp+size)
+        logging.getLogger('mp4').debug('The finshed point of the mvhd is: %d', starting_fp+size)
 
     def print_info(self):
         super().print_info()
@@ -282,7 +280,7 @@ class trakBox(Box):
             size -= box.size
         fp.seek(starting_fp+self.size)
 
-        logging.debug('The finshed point of the trak is: %d',
+        logging.getLogger('mp4').debug('The finshed point of the trak is: %d',
                       starting_fp+self.size)
 
     def print_info(self):
@@ -351,8 +349,8 @@ class tkhdBox(FullBox):
         self.box_info['width'] = ReadUI16x16(fp)
         self.box_info['height'] = ReadUI16x16(fp)
         fp.seek(starting_fp+self.size)
-        logging.info(self.box_info)
-        logging.debug('The finshed point of the mvhd is: %d', starting_fp+size)
+        logging.getLogger('mp4').info(self.box_info)
+        logging.getLogger('mp4').debug('The finshed point of the mvhd is: %d', starting_fp+size)
 
     def print_info(self):
         super().print_info()
@@ -372,7 +370,7 @@ class udtaBox(Box):
             size -= box.size
         fp.seek(starting_fp+self.size)
         fp.seek(starting_fp+self.size)
-        logging.debug('The finshed point of the %s is: %d',
+        logging.getLogger('mp4').debug('The finshed point of the %s is: %d',
                       boxType, starting_fp+size)
 
     def print_info(self):
@@ -394,5 +392,5 @@ class tselBox(FullBox):
         while fp < starting_fp+self.size:
             self.box_info['attribute_list'].append(ReadUI32ToString(fp))
         fp.seek(starting_fp+self.size)
-        logging.debug('The finshed point of the %s is: %d',
+        logging.getLogger('mp4').debug('The finshed point of the %s is: %d',
                       boxType, starting_fp+size)

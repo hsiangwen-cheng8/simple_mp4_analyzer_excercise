@@ -38,8 +38,9 @@ if __name__ == "__main__":
         exit()
     if not sys.argv[1].endswith('.mp4'):
         print('Please enter valid mp4 file...')
+    logger = logging.getLogger('mp4')
+    # change this to true to enable logging
+    logger.propagate = False
     logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', filename='log.log', filemode='w', level=logging.DEBUG)
-    logging.debug('Started')
-    # logger = logging.getLogger()
-    # logger.propagate = False
+    logger.debug('Started')
     main(sys.argv[1])
